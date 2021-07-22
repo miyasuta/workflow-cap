@@ -8,7 +8,8 @@ module.exports = function () {
         const context = {
             requestId: req.data.businessKey,
             requester: req.data.requester,
-            approvalSteps: req.data.to_Processors
+            subject: req.data.subject,
+            approvalSteps: req.data.Processors
         }
 
         try {

@@ -4,6 +4,7 @@ namespace demo.workflow;
 entity WorkflowInstances: cuid, managed {
     businessKey: String;
     instanceId: UUID;
+    subject: String;
     status: String;
     requester: String;
     startedAt: DateTime;
@@ -20,6 +21,7 @@ entity Processors: cuid, managed {
     comment: String;
     taskType: String;
     isComplete: Boolean;
+    decision: String;
     WorkflowInstance: Association to WorkflowInstances;
 }
 
