@@ -34,12 +34,41 @@ const updateStatus = async function (req, status) {
 module.exports = function () {
 
     this.before('CREATE', 'WorkflowInstances', async (req) => {
+        let history = [];
+
+        //copy history data
+        if (req.data.referenceId) {
+            const { History } = cds.entities
+            const result = await SELECT.from(History)
+            .columns`{
+                userId,
+                comment,
+                taskType,
+                completedAt,
+                decision,
+                rootInstanceId
+            }`.where({WorkflowInstance_ID: req.data.referenceId}) 
+
+            history = result.map((data)=>{
+                return {
+                    userId: data.userId,
+                    comment: data.comment,
+                    taskType: data.taskType,
+                    completedAt: data.completedAt,
+                    decision: data.decision,
+                    rootInstanceId: req.data.referenceId                
+                }
+            });         
+        }
+
         //start workflow
         const context = {
             requestId: req.data.businessKey,
             requester: req.data.requester,
             subject: req.data.subject,
-            approvalSteps: req.data.Processors
+            referenceId: req.data.referenceId,
+            approvalSteps: req.data.Processors,
+            approvalHistory: history ? history : []
         }     
 
         try {
@@ -53,10 +82,31 @@ module.exports = function () {
             req.data.startedAt = instance.startedAt
             req.data.startedBy = instance.startedBy
             req.data.status = instance.status
+
+            //create association to history
+            //in the case of new request, insert requester to the history
+            let requester;
+            if (req.data.Processors) {  
+                requester = req.data.Processors.find((processor)=>{
+                    return processor.taskType === "REQUEST"
+                })
+            }
+
+            if (!req.data.referenceId && requester) {
+                history.push({
+                    userId: requester.userId,
+                    comment: requester.comment,
+                    taskType: requester.taskType,
+                    completedAt: new Date(),
+                    decision: requester.decision   
+                });
+            }
+
+            req.data.History = history ? history : []
+
         } catch (err) {
             req.reject(err)
         }
-
     })
 
     this.on('suspend', 'WorkflowInstances', async(req) => {

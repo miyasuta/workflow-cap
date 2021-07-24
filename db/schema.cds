@@ -7,6 +7,7 @@ entity WorkflowInstances: cuid, managed {
     subject: String;
     status: String;
     requester: String;
+    referenceId: UUID;
     startedAt: DateTime;
     startedBy: String;
     completedAt: DateTime;
@@ -30,5 +31,7 @@ entity History: cuid, managed {
     comment: String;
     taskType: String;
     completedAt: DateTime;
+    decision: String;
+    rootInstanceId: UUID;
     WorkflowInstance: Association to WorkflowInstances;    
 }
