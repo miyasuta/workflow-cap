@@ -62,12 +62,22 @@ module.exports = function () {
         }
 
         //start workflow
+        const approvalSteps = req.data.Processors.map((processor)=>{
+            return {
+                taskType: processor.taskType,
+                decision: processor.decision,
+                index: processor.index,
+                comment: processor.comment,
+                userId: processor.userId,
+                isComplete : processor.isComplete           
+            }
+        })
         const context = {
             requestId: req.data.businessKey,
             requester: req.data.requester,
             subject: req.data.subject,
             referenceId: req.data.referenceId,
-            approvalSteps: req.data.Processors,
+            approvalSteps: approvalSteps,
             approvalHistory: history ? history : []
         }     
 
