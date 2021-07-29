@@ -133,7 +133,10 @@ module.exports = function () {
     this.on('getWorkflowInstanceId', async (req) => {
         //mock implementation
         // const { WorkflowInstances } = cds.entities
-        // const { ID, instanceId } = await SELECT.one.from(WorkflowInstances).columns`{ID, instanceId}`
+        // const results = await SELECT.one.from(WorkflowInstances).columns`{ID, instanceId}`.where({ID: req.data.taskId})
+        // if (!results) {
+        //     req.reject(404, `No record found for taskId ${req.data.taskId}`)
+        // }
         // return {
         //     ID: ID,
         //     instanceId: instanceId
@@ -141,12 +144,16 @@ module.exports = function () {
         const taskId = req.data.taskId
         try {
             const task = await UserTaskInstancesApi.getInstance(taskId).execute(destination);
+            console.log("workflowInstanceId: ", task.workflowInstanceId)
             const { WorkflowInstances } = cds.entities
-            const { ID, instanceId } = await SELECT.one.from(WorkflowInstances).columns`{ID, instanceId}`
+            const results = await SELECT.from(WorkflowInstances).columns`{ID, instanceId}`
                 .where({ instanceId: task.workflowInstanceId })
+            if (!results) {
+                req.reject(404, `No record found for taskId ${taskId}`)
+            }
             return {
-                ID: ID,
-                instanceId: instanceId
+                ID: results[0].ID,
+                instanceId: results[0].instanceId
             }
         } catch (err) {
              req.reject(err)
