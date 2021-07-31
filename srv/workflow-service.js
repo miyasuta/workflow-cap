@@ -34,8 +34,11 @@ const updateStatus = async function (req, status) {
 module.exports = function () {
 
     this.before('CREATE', 'WorkflowInstances', async (req) => {
-        let history = [];
+        if (req.headers.decision) {
+            return
+        }
 
+        let history = [];
         //copy history data
         if (req.data.referenceId) {
             const { History } = cds.entities
@@ -59,6 +62,8 @@ module.exports = function () {
                     rootInstanceId: req.data.referenceId
                 }
             });
+
+            //TODO: add pull back record
         }
 
         //start workflow
@@ -117,6 +122,88 @@ module.exports = function () {
             req.reject(err)
         }
     })
+
+    this.before('UPDATE', 'WorkflowInstances', async (req) => {
+        console.log("UPDATE:WorkflowInstances")
+    //     //update user task
+        if (!req.headers.decision || !req.headers.taskinstanceid) {
+            return
+        }
+
+        const approvalSteps = req.data.Processors.map((processor) => {
+            return {
+                taskType: processor.taskType,
+                decision: processor.decision,
+                index: processor.index,
+                comment: processor.comment,
+                userId: processor.userId,
+                isComplete: processor.isComplete
+            }
+        })        
+
+        const updateContext = {
+            subject: req.data.subject,
+            decision: req.headers.decision,
+            approvalSteps: approvalSteps
+        }
+
+        try {
+            // get current context
+            const { WorkflowInstances, History } = cds.entities
+            const id = req.params[0]
+            const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
+            if (!result || !result.instanceId) {
+                throw 'InstanceId not found!'
+            }       
+            const workflowInstanceID = result.instanceId
+            const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID).execute(destination)
+            console.log("context: ", JSON.stringify(context))
+            const index = context.nextProcessor?.index
+            if (!index) {
+                throw 'Next Processor not found!'
+            }
+
+            //udate task
+            await UserTaskInstancesApi.updateInstance(req.headers.taskinstanceid, {
+                context: updateContext,
+                status: 'COMPLETED',
+            }).execute(destination);
+
+            //update "isComplete"
+            req.data.Processors[index].isComplete = true 
+            req.data.Processors[index].decision = req.headers.decision           
+
+            // update history
+            const currentProcessor = req.data.Processors[index]
+            const history = [{
+                userId: currentProcessor.userId,
+                comment: currentProcessor.comment,
+                taskType: currentProcessor.taskType,
+                completedAt: new Date(),
+                decision: req.headers.decision,
+                rootInstanceId: "",      
+                WorkflowInstance_ID: id
+            }]
+            await INSERT (history) .into (History)
+
+        } catch (err) {
+            req.reject(err)
+        }
+
+    })
+
+    this.after('UPDATE', 'WorkflowInstances', async (req) => {
+        console.log('after UPDATE')
+        //update history
+    })
+
+    this.before('UPDATE', 'Processors', async (req) => {
+        console.log("UPDATE:Processors")
+    })   
+    
+    this.before('CREATE', 'Processors', async (req) => {
+        console.log("CREATE:Processors", JSON.stringify(req.data))
+    })      
 
     this.on('suspend', 'WorkflowInstances', async (req) => {
         return updateStatus(req, "SUSPENDED")
