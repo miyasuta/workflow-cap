@@ -1,0 +1,24 @@
+{
+    "xsappname": "wf-cap",
+    "scopes": [
+      {
+        "name": "uaa.user",
+        "description": "UAA"
+      },
+      {
+        "name": "$XSAPPNAME.wf-cap",
+        "grant-as-authority-to-apps" : [ "$XSAPPNAME(application, workflowUI)"]
+      }    
+    ],
+    "attributes": [],
+    "role-templates": [
+      {
+        "name": "Token_Exchange",
+        "description": "UAA",
+        "scope-references": [
+          "uaa.user"
+        ]
+      }    
+    ]
+  }
+  

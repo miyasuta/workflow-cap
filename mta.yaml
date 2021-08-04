@@ -31,7 +31,7 @@ modules:
         srv-url: ${default-url}
    requires:
     - name: wf_cloud_sdk-destination
-    - name: workflowUI_uaa
+    - name: wf-cap-xsuaa
     - name: wf-cap-db
 
  - name: db
@@ -41,7 +41,7 @@ modules:
      app-name: wf-cap-db  
    requires:
     - name: wf-cap-db
-    - name: workflowUI_uaa  
+    - name: wf-cap-xsuaa 
 
 resources:
  - name: wf-cap-db
@@ -55,8 +55,12 @@ resources:
  - name: wf_cloud_sdk-destination
    type: org.cloudfoundry.existing-service
 
- - name: workflowUI_uaa
-   type: org.cloudfoundry.existing-service
+ - name: wf-cap-xsuaa 
+   type: org.cloudfoundry.managed-service
+   parameters:
+     service: xsuaa
+     service-plan: application
+     path: ./xs-security.json     
 
 
 
