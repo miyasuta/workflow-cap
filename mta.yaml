@@ -31,7 +31,7 @@ modules:
         srv-url: ${default-url}
    requires:
     - name: wf_cloud_sdk-destination
-    - name: wf_cloud_sdk-xsuaa
+    - name: workflowUI_uaa
     - name: wf-cap-db
 
  - name: db
@@ -41,7 +41,7 @@ modules:
      app-name: wf-cap-db  
    requires:
     - name: wf-cap-db
-    - name: wf_cloud_sdk-xsuaa   
+    - name: workflowUI_uaa  
 
 resources:
  - name: wf-cap-db
@@ -55,7 +55,7 @@ resources:
  - name: wf_cloud_sdk-destination
    type: org.cloudfoundry.existing-service
 
- - name: wf_cloud_sdk-xsuaa
+ - name: workflowUI_uaa
    type: org.cloudfoundry.existing-service
 
 

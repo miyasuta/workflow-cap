@@ -1,6 +1,7 @@
   
 using { demo.workflow as workflow } from '../db/schema';
 
+@requires: 'authenticated-user'
 service WorkflowService {
     entity WorkflowInstances as projection on workflow.WorkflowInstances
         actions {

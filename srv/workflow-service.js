@@ -1,15 +1,27 @@
 const cds = require('@sap/cds')
 const { WorkflowInstancesApi, UserTaskInstancesApi } = require('@sap/cloud-sdk-workflow-service-cf')
-const destination = { destinationName: 'Workflow-Api' }
+// const destination = { destinationName: 'Workflow-Api' }
+const destination = { destinationName: 'WorkflowRESTAPI' }; //OAuth2UserTokenExchange
+
+const getDestination = function (req) {
+    const jwt = req.headers.authorization.slice(7)
+    if (!jwt) {
+        throw 'JWT not found!'
+    }
+    return {
+        destinationName: 'WorkflowRESTAPI',
+        jwt: jwt   
+    }
+}
 
 const updateStatus = async function (req, status) {
     //get workflow instance id
     const { WorkflowInstances } = cds.entities
     const id = req.params[0];
-    const { instanceId } = await SELECT.one.from(WorkflowInstances)
+    const result = await SELECT.one.from(WorkflowInstances)
         .columns`{instanceId}`.where({ ID: id })
-    if (!instanceId) {
-        req.err(404, 'indstancdId not found!')
+    if (!result || !result.instanceId) {
+        req.reject('indstancdId not found!')
     }
 
     const body = {
@@ -21,7 +33,7 @@ const updateStatus = async function (req, status) {
         await WorkflowInstancesApi.updateInstance(
             instanceId,
             body,
-        ).execute(destination);
+        ).execute(getDestination(req));
     } catch (err) {
         req.reject(err)
     }
@@ -32,6 +44,11 @@ const updateStatus = async function (req, status) {
 }
 
 module.exports = function () {
+    this.before('READ', 'WorkflowInstances', async(context) => {
+        // const jwt = context.req.authInfo.getTokenInfo().getTokenValue()
+        // console.log('READ handler');
+        // console.log('jwt: ', jwt)
+    })
 
     this.before('CREATE', 'WorkflowInstances', async (req) => {
         if (req.headers.decision) {
@@ -85,12 +102,11 @@ module.exports = function () {
             approvalSteps: approvalSteps,
             approvalHistory: history ? history : []
         }
-
         try {
             const instance = await WorkflowInstancesApi.startInstance({
                 definitionId: 'multilevelapproval',
                 context: context,
-            }).execute(destination);
+            }).execute(getDestination(req));
 
             //set instance info
             req.data.instanceId = instance.id
@@ -156,7 +172,8 @@ module.exports = function () {
                 throw 'InstanceId not found!'
             }       
             const workflowInstanceID = result.instanceId
-            const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID).execute(destination)
+            const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID)
+                            .execute(getDestination(req))
             console.log("context: ", JSON.stringify(context))
             const index = context.nextProcessor?.index
             if (!index) {
@@ -167,7 +184,7 @@ module.exports = function () {
             await UserTaskInstancesApi.updateInstance(req.headers.taskinstanceid, {
                 context: updateContext,
                 status: 'COMPLETED',
-            }).execute(destination);
+            }).execute(getDestination(req));
 
             //update "isComplete"
             req.data.Processors[index].isComplete = true 
@@ -230,7 +247,8 @@ module.exports = function () {
         // };
         const taskId = req.data.taskId
         try {
-            const task = await UserTaskInstancesApi.getInstance(taskId).execute(destination);
+            const task = await UserTaskInstancesApi.getInstance(taskId)
+                            .execute(getDestination(req));
             console.log("workflowInstanceId: ", task.workflowInstanceId)
             const { WorkflowInstances } = cds.entities
             const results = await SELECT.from(WorkflowInstances).columns`{ID, instanceId}`
