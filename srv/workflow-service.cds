@@ -8,7 +8,8 @@ service WorkflowService {
             action suspend();
             action resume();
             action cancel();
-            function getProcessors() returns array of Processors
+            function getProcessors() returns array of Processors;
+            function getActiveTask() returns workflow.Task;
         };
     entity Processors as projection on workflow.Processors;
     entity History as projection on workflow.History;

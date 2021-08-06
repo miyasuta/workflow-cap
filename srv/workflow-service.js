@@ -190,32 +190,33 @@ module.exports = function () {
 
         try {
             // // get current context
-            const { WorkflowInstances, History } = cds.entities
-            const id = req.params[0]
-            const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
-            if (!result || !result.instanceId) {
-                throw 'InstanceId not found!'
-            }       
-            const workflowInstanceID = result.instanceId
-            const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID)
-                            .execute(getDestination(req))
-            console.log("context: ", JSON.stringify(context))
-            const index = context.nextProcessor?.index
-            if (!index) {
-                throw 'Next Processor not found!'
-            }
+            // const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
+            // if (!result || !result.instanceId) {
+            //     throw 'InstanceId not found!'
+            // }       
+            // const workflowInstanceID = result.instanceId
+            // const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID)
+            //                 .execute(getDestination(req))   
 
-            //udate task
+           // get context before update
+            const context = await getContext(req)              
+
+            // udate task
             await UserTaskInstancesApi.updateInstance(req.headers.taskinstanceid, {
                 context: updateContext,
                 status: 'COMPLETED',
             }).execute(getDestination(req));
 
-            //update "isComplete"
+            const index = context.nextProcessor?.index
+            if (!index) {
+                throw 'Next Processor not found!'
+            } 
             req.data.Processors[index].isComplete = true 
             req.data.Processors[index].decision = req.headers.decision
 
             // update history
+            const { History } = cds.entities
+            const id = req.params[0]            
             const currentProcessor = req.data.Processors[index]
             const history = [{
                 userId: currentProcessor.userId,
@@ -276,6 +277,32 @@ module.exports = function () {
         })
         return approvalSteps
     });
+
+    this.on('getActiveTask', 'WorkflowInstances', async (req) => {
+        // mock implementation
+        // const { Processors } = cds.entities
+        // const id = req.params[0];
+        // const results =  await SELECT.from(Processors).where({WorkflowInstance_ID: id})
+        // return {
+        //         taskType: results[0].taskType,
+        //         index: results[0].index,
+        //         userId: results[0].userId,
+        //         isRequester: false
+        // }
+
+        const context = await getContext(req)
+        if (!context.nextProcessor || !context.approvalSteps) {
+            req.reject('nextProcessor or approvalSteps not found!')
+        }
+        const index = context.nextProcessor.index
+        const nextProcessor = context.approvalSteps[index]
+        return {
+            taskType: nextProcessor.taskType,
+            index: index,
+            userId: nextProcessor.userId,
+            isRequester: context.isRequester
+        }
+    })
 
     this.on('getWorkflowInstanceId', async (req) => {
         //mock implementation

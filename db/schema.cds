@@ -35,3 +35,10 @@ entity History: cuid, managed {
     rootInstanceId: UUID;
     WorkflowInstance: Association to WorkflowInstances;    
 }
+
+type Task: {
+    taskType: String;
+    index: Integer;
+    userId: String;
+    isRequester: Boolean;
+}
