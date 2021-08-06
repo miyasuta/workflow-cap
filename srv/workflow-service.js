@@ -1,7 +1,5 @@
 const cds = require('@sap/cds')
 const { WorkflowInstancesApi, UserTaskInstancesApi } = require('@sap/cloud-sdk-workflow-service-cf')
-// const destination = { destinationName: 'Workflow-Api' }
-const destination = { destinationName: 'WorkflowRESTAPI' }; //OAuth2UserTokenExchange
 
 const getDestination = function (req) {
     const jwt = req.headers.authorization.slice(7)
@@ -43,11 +41,31 @@ const updateStatus = async function (req, status) {
     n > 0 || req.err(500, 'Update of CAP status failed!')
 }
 
+const getContext = async function (req) {
+    // get current context
+    const { WorkflowInstances } = cds.entities
+    const id = req.params[0]
+    const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
+    if (!result || !result.instanceId) {
+        req.reject('InstanceId not found!') 
+    }      
+
+    try {
+        const workflowInstanceID = result.instanceId
+        const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID)
+                        .execute(getDestination(req))   
+        return context
+    }
+    catch (err) {
+        req.reject(err)
+    }
+}
+
 module.exports = function () {
     this.before('READ', 'WorkflowInstances', async(context) => {
-        // const jwt = context.req.authInfo.getTokenInfo().getTokenValue()
-        // console.log('READ handler');
-        // console.log('jwt: ', jwt)
+        const jwt = context.req.authInfo.getTokenInfo().getTokenValue()
+        console.log('READ handler');
+        console.log('jwt: ', jwt)
     })
 
     this.before('CREATE', 'WorkflowInstances', async (req) => {
@@ -157,14 +175,21 @@ module.exports = function () {
             }
         })        
 
+        //2021.08.06
+        let reorkProcessors = {}
+        if (req.headers.reworkprocessor) {
+            reworkProcessor = JSON.parse(req.headers.reworkprocessor)
+        }
+
         const updateContext = {
             subject: req.data.subject,
             decision: req.headers.decision,
-            approvalSteps: approvalSteps
+            approvalSteps: approvalSteps,
+            reworkProcessor: reworkProcessor
         }
 
         try {
-            // get current context
+            // // get current context
             const { WorkflowInstances, History } = cds.entities
             const id = req.params[0]
             const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
@@ -188,7 +213,7 @@ module.exports = function () {
 
             //update "isComplete"
             req.data.Processors[index].isComplete = true 
-            req.data.Processors[index].decision = req.headers.decision           
+            req.data.Processors[index].decision = req.headers.decision
 
             // update history
             const currentProcessor = req.data.Processors[index]
@@ -212,16 +237,9 @@ module.exports = function () {
     this.after('UPDATE', 'WorkflowInstances', async (req) => {
         console.log('after UPDATE')
         //update history
-    })
+    })     
 
-    this.before('UPDATE', 'Processors', async (req) => {
-        console.log("UPDATE:Processors")
-    })   
-    
-    this.before('CREATE', 'Processors', async (req) => {
-        console.log("CREATE:Processors", JSON.stringify(req.data))
-    })      
-
+    //Actions and Functions
     this.on('suspend', 'WorkflowInstances', async (req) => {
         return updateStatus(req, "SUSPENDED")
     });
@@ -232,6 +250,31 @@ module.exports = function () {
 
     this.on('cancel', 'WorkflowInstances', async (req) => {
         return updateStatus(req, "COMPLETED")
+    });
+
+    this.on('getProcessors', 'WorkflowInstances', async (req) => {
+        //mock implementation
+        // const { Processors } = cds.entities
+        // const id = req.params[0];
+        // const results =  await SELECT.from(Processors).where({WorkflowInstance_ID: id})
+        // return results
+
+        const context = await getContext(req)
+        if (!context.approvalSteps) {
+            req.reject('Approval Steps not found!')
+        }
+        
+        const approvalSteps = context.approvalSteps.map((step)=>{
+            return {
+                userId: step.userId,
+                index: step.index,
+                comment: step.comment,
+                taskType: step.taskType,
+                isComplete: step.isComplete,
+                decision: step.decision
+            }
+        })
+        return approvalSteps
     });
 
     this.on('getWorkflowInstanceId', async (req) => {

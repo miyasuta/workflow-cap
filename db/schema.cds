@@ -16,7 +16,6 @@ entity WorkflowInstances: cuid, managed {
     History: Composition of many History on History.WorkflowInstance=$self;
 }
 
-@cds.persistence.skip
 entity Processors: cuid, managed {
     userId: String;
     index: Integer;

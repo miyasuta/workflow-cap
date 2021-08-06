@@ -8,6 +8,7 @@ service WorkflowService {
             action suspend();
             action resume();
             action cancel();
+            function getProcessors() returns array of Processors
         };
     entity Processors as projection on workflow.Processors;
     entity History as projection on workflow.History;
@@ -16,6 +17,6 @@ service WorkflowService {
     returns {
         ID: WorkflowInstances:ID;
         instanceId: WorkflowInstances:instanceId;
-    }; 
+    };
     
 }
