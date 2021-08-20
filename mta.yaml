@@ -33,6 +33,7 @@ modules:
     - name: wf_cloud_sdk-destination
     - name: workflowUI_uaa
     - name: wf-cap-db
+    - name: em-demo
 
  - name: db
    type: hdb
@@ -57,6 +58,9 @@ resources:
 
  - name: workflowUI_uaa
    type: org.cloudfoundry.existing-service
+
+ - name: em-demo
+   type: org.cloudfoundry.existing-service   
 
 
 

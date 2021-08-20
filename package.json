@@ -10,6 +10,7 @@
     "@sap/cds": "^5",
     "@sap/cloud-sdk-workflow-service-cf": "^1.26.0",
     "@sap/hana-client": "^2.6.61",
+    "@sap/xb-msg-amqp-v100": "^0.9.52",
     "@sap/xsenv": "^3.1.1",
     "@sap/xssec": "^3.2.2",
     "express": "^4",
@@ -61,6 +62,9 @@
       },
       "uaa": {
         "kind": "xsuaa"
+      },
+      "messaging": {
+        "kind": "enterprise-messaging-shared"
       }
     }
   }

@@ -12,6 +12,12 @@ const getDestination = function (req) {
     }
 }
 
+const getDestinationWithClientCredential = function () {
+    return {
+        destinationName: 'Workflow-Api'
+    }    
+} 
+
 const updateStatus = async function (req, status) {
     //get workflow instance id
     const { WorkflowInstances } = cds.entities
@@ -61,7 +67,7 @@ const getContext = async function (req) {
     }
 }
 
-module.exports = function () {
+module.exports = async function () {
     this.before('READ', 'WorkflowInstances', async(context) => {
         const jwt = context.req.authInfo.getTokenInfo().getTokenValue()
         console.log('READ handler');
@@ -176,7 +182,7 @@ module.exports = function () {
         })        
 
         //2021.08.06
-        let reorkProcessors = {}
+        let reworkProcessor = {}
         if (req.headers.reworkprocessor) {
             reworkProcessor = JSON.parse(req.headers.reworkprocessor)
         }
@@ -250,7 +256,7 @@ module.exports = function () {
     });
 
     this.on('cancel', 'WorkflowInstances', async (req) => {
-        return updateStatus(req, "COMPLETED")
+        return updateStatus(req, "CANCELED")
     });
 
     this.on('getProcessors', 'WorkflowInstances', async (req) => {
@@ -334,5 +340,42 @@ module.exports = function () {
              req.reject(err)
          }
     })
+
+    //complete event
+    const messaging = await cds.connect.to("messaging")
+    messaging.on('wfcomplete', async (msg) => {
+        const message = msg.headers  
+        console.log('===> Received message : ' + JSON.stringify(message))
+        const instanceId = message.workflowInstanceId
+
+        //get workflow instance
+        const instance = await WorkflowInstancesApi.getInstance(instanceId)
+                            .execute(getDestinationWithClientCredential());        
+        console.log('===> Received instance : ' + JSON.stringify(instance))
+        const { WorkflowInstances } = cds.entities
+        //set 'COMPLETED', as instance is not yet updated
+        const n = await UPDATE (WorkflowInstances).set({
+            status: 'COMPLETED',
+            completedAt: new Date()
+        }).where({instanceId: instanceId})
+
+        // //mock
+        // //get workflow instance
+        // const instance = {
+        //     status: 'COMPLETED',
+        //     // completedAt: new Date(),
+        //     // completedBy: 'dummy'
+        // }
+
+        // const { WorkflowInstances } = cds.entities
+        // const n = await UPDATE (WorkflowInstances).set({
+        //     status: instance.status,
+        //     completedAt: instance.completedAt? instance.completedAt: null,
+        //     completedBy: instance.completedBy? instance.completedBy: null
+        // }).where({ID: instanceId})
+
+        const logMessage = n > 0 ? '===> Status updated' : '===> Update of status failed!'
+        console.log(logMessage)
+    })   
 
 }
