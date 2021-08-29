@@ -1,5 +1,6 @@
 const cds = require('@sap/cds')
 const { WorkflowInstancesApi, UserTaskInstancesApi } = require('@sap/cloud-sdk-workflow-service-cf')
+const utils  = require('./utils')
 
 const getDestination = function (req) {
     const jwt = req.headers.authorization.slice(7)
@@ -79,6 +80,8 @@ module.exports = async function () {
             return
         }
 
+        utils.checkApprovers()
+
         let history = [];
         //copy history data
         if (req.data.referenceId) {
@@ -127,16 +130,16 @@ module.exports = async function () {
             approvalHistory: history ? history : []
         }
         try {
-            const instance = await WorkflowInstancesApi.startInstance({
-                definitionId: 'multilevelapproval',
-                context: context,
-            }).execute(getDestination(req));
+            // const instance = await WorkflowInstancesApi.startInstance({
+            //     definitionId: 'multilevelapproval',
+            //     context: context,
+            // }).execute(getDestination(req));
 
-            //set instance info
-            req.data.instanceId = instance.id
-            req.data.startedAt = instance.startedAt
-            req.data.startedBy = instance.startedBy
-            req.data.status = instance.status
+            // //set instance info
+            // req.data.instanceId = instance.id
+            // req.data.startedAt = instance.startedAt
+            // req.data.startedBy = instance.startedBy
+            // req.data.status = instance.status
 
             //create association to history
             //in the case of new request, insert requester to the history
