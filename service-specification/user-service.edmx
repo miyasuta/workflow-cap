@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="UserService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="Users" EntityType="UserService.Users"/>
+        <EntitySet Name="RoleCollections" EntityType="UserService.RoleCollections"/>
+        <EntitySet Name="Roles" EntityType="UserService.Roles"/>
+        <EntitySet Name="Scopes" EntityType="UserService.Scopes"/>
+        <ActionImport Name="loadUsers" Action="UserService.loadUsers"/>
+        <ActionImport Name="loadRoleCollections" Action="UserService.loadRoleCollections"/>
+        <ActionImport Name="loadRoles" Action="UserService.loadRoles"/>
+        <FunctionImport Name="userHasScope" Function="UserService.userHasScope"/>
+      </EntityContainer>
+      <EntityType Name="Users">
+        <Key>
+          <PropertyRef Name="id"/>
+        </Key>
+        <Property Name="createdAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="createdBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="modifiedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="id" Type="Edm.Guid" Nullable="false"/>
+        <Property Name="externalId" Type="Edm.String"/>
+        <Property Name="userName" Type="Edm.String"/>
+        <Property Name="familyName" Type="Edm.String"/>
+        <Property Name="givenName" Type="Edm.String"/>
+      </EntityType>
+      <EntityType Name="RoleCollections">
+        <Key>
+          <PropertyRef Name="name"/>
+          <PropertyRef Name="roleTemplateAppId"/>
+          <PropertyRef Name="roleTemplateName"/>
+          <PropertyRef Name="roleName"/>
+        </Key>
+        <Property Name="createdAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="createdBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="modifiedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="name" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleTemplateAppId" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleTemplateName" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleName" Type="Edm.String" Nullable="false"/>
+      </EntityType>
+      <EntityType Name="Roles">
+        <Key>
+          <PropertyRef Name="roleTemplateName"/>
+          <PropertyRef Name="roleTemplateAppId"/>
+          <PropertyRef Name="roleName"/>
+          <PropertyRef Name="scopeName"/>
+        </Key>
+        <Property Name="createdAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="createdBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="modifiedAt" Type="Edm.DateTimeOffset" Precision="7"/>
+        <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
+        <Property Name="roleTemplateName" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleTemplateAppId" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleName" Type="Edm.String" Nullable="false"/>
+        <Property Name="scopeName" Type="Edm.String" Nullable="false"/>
+      </EntityType>
+      <EntityType Name="Scopes">
+        <Key>
+          <PropertyRef Name="name"/>
+          <PropertyRef Name="roleTemplateName"/>
+          <PropertyRef Name="roleTemplateAppId"/>
+          <PropertyRef Name="roleName"/>
+          <PropertyRef Name="scopeName"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleTemplateName" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleTemplateAppId" Type="Edm.String" Nullable="false"/>
+        <Property Name="roleName" Type="Edm.String" Nullable="false"/>
+        <Property Name="scopeName" Type="Edm.String" Nullable="false"/>
+      </EntityType>
+      <Action Name="loadUsers" IsBound="false">
+        <ReturnType Type="Edm.String"/>
+      </Action>
+      <Action Name="loadRoleCollections" IsBound="false">
+        <ReturnType Type="Edm.String"/>
+      </Action>
+      <Action Name="loadRoles" IsBound="false">
+        <ReturnType Type="Edm.String"/>
+      </Action>
+      <Function Name="userHasScope" IsBound="false" IsComposable="false">
+        <Parameter Name="userId" Type="Edm.String"/>
+        <Parameter Name="scope" Type="Edm.String"/>
+        <ReturnType Type="Edm.Boolean"/>
+      </Function>
+      <Annotations Target="UserService.Users/createdAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.Users/createdBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedBy}"/>
+      </Annotations>
+      <Annotations Target="UserService.Users/modifiedAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.Users/modifiedBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedBy}"/>
+      </Annotations>
+      <Annotations Target="UserService.RoleCollections/createdAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.RoleCollections/createdBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedBy}"/>
+      </Annotations>
+      <Annotations Target="UserService.RoleCollections/modifiedAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.RoleCollections/modifiedBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedBy}"/>
+      </Annotations>
+      <Annotations Target="UserService.Roles/createdAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.Roles/createdBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Immutable" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>CreatedBy}"/>
+      </Annotations>
+      <Annotations Target="UserService.Roles/modifiedAt">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedAt}"/>
+      </Annotations>
+      <Annotations Target="UserService.Roles/modifiedBy">
+        <Annotation Term="UI.HiddenFilter" Bool="true"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+        <Annotation Term="Core.Description" String="{i18n>UserID.Description}"/>
+        <Annotation Term="Common.Label" String="{i18n>ChangedBy}"/>
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+
+<!-- srcFile:c:\Users\mio-f\UI5Projects\cap\user-roles\srv\user-service.cds -->

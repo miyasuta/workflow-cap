@@ -1,0 +1,7 @@
+{
+  "user-service": {
+    "directoryName": "user-service",
+    "servicePath": "VALUE_IS_UNDEFINED",
+    "npmPackageName": "user-service"
+  }
+}
