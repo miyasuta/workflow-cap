@@ -5,11 +5,11 @@ const _checkResponse = function (responses) {
         console.log('previous ==>', previous)
         if (current.status !== 200) {
             previous.hasError = true
-            previous.message = previous.message + current.body.error?.message + ' </br>'
+            previous.message = previous.message + current.body.error?.message + '\n'
         } else {
             if (!current.body.hasScope) {
                 previous.hasError = true
-                previous.message = previous.message + `User ${current.body.userId} does not have scope ${current.body.scope} </br>` 
+                previous.message = previous.message + `User ${current.body.userId} does not have scope ${current.body.scope}\n` 
             }
         }
         return previous
@@ -60,12 +60,12 @@ module.exports = {
             })  
             const result = _checkResponse(response.data.responses)
             if(result.hasError) {
-                req.error(result.message)
+                req.reject(409, result.message)
             } else {
                 return true
             }
         } catch (err) {
-            req.error(err)
+            req.reject(err)
         }    
     }
 }

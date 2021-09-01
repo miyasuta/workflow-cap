@@ -45,7 +45,7 @@ const updateStatus = async function (req, status) {
 
     //update DB status
     const n = await UPDATE(WorkflowInstances).set({ status: status }).where({ ID: id })
-    n > 0 || req.err(500, 'Update of CAP status failed!')
+    n > 0 || req.reject(500, 'Update of CAP status failed!')
 }
 
 const getContext = async function (req) {
@@ -130,16 +130,16 @@ module.exports = async function () {
             approvalHistory: history ? history : []
         }
         try {
-            // const instance = await WorkflowInstancesApi.startInstance({
-            //     definitionId: 'multilevelapproval',
-            //     context: context,
-            // }).execute(utils.getDestination(req));
+            const instance = await WorkflowInstancesApi.startInstance({
+                definitionId: 'multilevelapproval',
+                context: context,
+            }).execute(utils.getDestination(req));
 
-            // //set instance info
-            // req.data.instanceId = instance.id
-            // req.data.startedAt = instance.startedAt
-            // req.data.startedBy = instance.startedBy
-            // req.data.status = instance.status
+            //set instance info
+            req.data.instanceId = instance.id
+            req.data.startedAt = instance.startedAt
+            req.data.startedBy = instance.startedBy
+            req.data.status = instance.status
 
             //create association to history
             //in the case of new request, insert requester to the history
@@ -198,15 +198,6 @@ module.exports = async function () {
         }
 
         try {
-            // // get current context
-            // const result = await SELECT.one.from(WorkflowInstances).columns(`{instanceId}`).where({ID: id})
-            // if (!result || !result.instanceId) {
-            //     throw 'InstanceId not found!'
-            // }       
-            // const workflowInstanceID = result.instanceId
-            // const context = await WorkflowInstancesApi.getInstanceContext(workflowInstanceID)
-            //                 .execute(utils.getDestination(req))   
-
            // get context before update
             const context = await getContext(req)              
 
@@ -246,7 +237,6 @@ module.exports = async function () {
 
     this.after('UPDATE', 'WorkflowInstances', async (req) => {
         console.log('after UPDATE')
-        //update history
     })     
 
     //Actions and Functions
