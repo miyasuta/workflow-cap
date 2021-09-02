@@ -4,6 +4,7 @@ namespace demo.workflow;
 entity WorkflowInstances: cuid, managed {
     businessKey: String;
     instanceId: UUID;
+    objectId: Integer;
     subject: String;
     status: String;
     requester: String;
